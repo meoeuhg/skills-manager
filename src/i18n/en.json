@@ -732,7 +732,12 @@
     "removedToast": "Removed {{removed}} skill-agent item(s).",
     "partialFailedToast": "{{count}} operation(s) failed",
     "nothingToAdd": "No missing skills to add",
-    "nothingToRemove": "No matching skills to remove"
+    "nothingToRemove": "No matching skills to remove",
+    "statusActive": "Active",
+    "statusPartial": "{{installed}} / {{total}}",
+    "statusInactive": "Not added",
+    "activate": "Activate",
+    "deactivate": "Deactivate"
   },
   "globalWorkspace": {
     "title": "Global Workspace",

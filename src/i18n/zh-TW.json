@@ -665,7 +665,12 @@
     "removedToast": "已移除 {{removed}} 個 Skill-Agent 項。",
     "partialFailedToast": "{{count}} 個操作失敗",
     "nothingToAdd": "沒有缺少 Skills 可加入",
-    "nothingToRemove": "沒有符合 Skills 可移除"
+    "nothingToRemove": "沒有符合 Skills 可移除",
+    "statusActive": "已啟用",
+    "statusPartial": "{{installed}} / {{total}}",
+    "statusInactive": "未加入",
+    "activate": "啟用",
+    "deactivate": "取消啟用"
   },
   "globalWorkspace": {
     "title": "全域工作區",

@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { Loader2, Plus, Square, SquareCheck, Trash2, X } from "lucide-react";
+import { Loader2, Square, SquareCheck, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { cn } from "../utils";
 import type { ManagedSkill, Scenario } from "../lib/tauri";
+import { getScenarioIconOption } from "../lib/scenarioIcons";
 
 export interface PresetWorkspaceAgent {
   key: string;
@@ -19,8 +20,6 @@ export interface PresetWorkspaceActionResult {
   skipped: number;
   failed: number;
 }
-
-type PresetWorkspaceAction = "add" | "remove";
 
 interface Props {
   open: boolean;
@@ -37,13 +36,36 @@ interface Props {
   onComplete: (result: PresetWorkspaceActionResult) => Promise<void> | void;
 }
 
+type PresetStatus = "active" | "partial" | "inactive" | "empty";
+
+function computePresetStatus(
+  preset: Scenario,
+  skills: ManagedSkill[],
+  selectedAgents: string[],
+  existsInWorkspace: (skill: ManagedSkill, agentKey: string) => boolean
+): { status: PresetStatus; installed: number; total: number } {
+  const presetSkills = skills.filter((s) => s.scenario_ids.includes(preset.id));
+  if (presetSkills.length === 0 || selectedAgents.length === 0) {
+    return { status: "empty", installed: 0, total: 0 };
+  }
+  const total = presetSkills.length * selectedAgents.length;
+  let installed = 0;
+  for (const skill of presetSkills) {
+    for (const agentKey of selectedAgents) {
+      if (existsInWorkspace(skill, agentKey)) installed++;
+    }
+  }
+  if (installed === total) return { status: "active", installed, total };
+  if (installed === 0) return { status: "inactive", installed, total };
+  return { status: "partial", installed, total };
+}
+
 export function PresetWorkspaceActionDialog({
   open,
   title,
   presets,
   managedSkills,
   agents,
-  initialPresetId,
   initialSelectedAgents,
   onClose,
   existsInWorkspace,
@@ -52,11 +74,8 @@ export function PresetWorkspaceActionDialog({
   onComplete,
 }: Props) {
   const { t } = useTranslation();
-  const [selectedPresetId, setSelectedPresetId] = useState("");
-  const [action, setAction] = useState<PresetWorkspaceAction>("add");
   const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
-  const [selectedRemoveSkillIds, setSelectedRemoveSkillIds] = useState<Set<string>>(new Set());
-  const [running, setRunning] = useState(false);
+  const [loadingKey, setLoadingKey] = useState<string | null>(null);
 
   const availableAgents = useMemo(
     () => agents.filter((agent) => agent.installed),
@@ -64,356 +83,219 @@ export function PresetWorkspaceActionDialog({
   );
 
   const defaultAgentKeys = useMemo(() => {
-    const valid = new Set(availableAgents.map((agent) => agent.key));
+    const valid = new Set(availableAgents.map((a) => a.key));
     const fromInitial = (initialSelectedAgents ?? []).filter((key) => valid.has(key));
     if (fromInitial.length > 0) return Array.from(new Set(fromInitial));
-
-    const enabled = availableAgents.filter((agent) => agent.enabled).map((agent) => agent.key);
-    if (enabled.length > 0) return enabled;
-    return availableAgents.map((agent) => agent.key);
+    const enabled = availableAgents.filter((a) => a.enabled).map((a) => a.key);
+    return enabled.length > 0 ? enabled : availableAgents.map((a) => a.key);
   }, [availableAgents, initialSelectedAgents]);
 
   useEffect(() => {
     if (!open) return;
-    const initialPreset =
-      (initialPresetId && presets.some((preset) => preset.id === initialPresetId) && initialPresetId) ||
-      presets[0]?.id ||
-      "";
-    setSelectedPresetId(initialPreset);
-    setAction("add");
     setSelectedAgents(defaultAgentKeys);
-    setSelectedRemoveSkillIds(new Set());
-    setRunning(false);
-  }, [defaultAgentKeys, initialPresetId, open, presets]);
-
-  const selectedPreset = useMemo(
-    () => presets.find((preset) => preset.id === selectedPresetId) ?? null,
-    [presets, selectedPresetId]
-  );
-
-  const presetSkills = useMemo(
-    () => managedSkills.filter((skill) => selectedPresetId && skill.scenario_ids.includes(selectedPresetId)),
-    [managedSkills, selectedPresetId]
-  );
+    setLoadingKey(null);
+  }, [open, defaultAgentKeys]);
 
   const selectedAgentSet = useMemo(() => new Set(selectedAgents), [selectedAgents]);
 
-  const addRows = useMemo(() => presetSkills.map((skill) => {
-    const missingAgents = selectedAgents.filter((agentKey) => !existsInWorkspace(skill, agentKey));
-    return { skill, missingAgents };
-  }), [existsInWorkspace, presetSkills, selectedAgents]);
+  const toggleAgent = (key: string) => {
+    setSelectedAgents((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  };
 
-  const missingPairCount = useMemo(
-    () => addRows.reduce((sum, row) => sum + row.missingAgents.length, 0),
-    [addRows]
-  );
-
-  const totalPairCount = presetSkills.length * selectedAgents.length;
-  const skippedPairCount = Math.max(totalPairCount - missingPairCount, 0);
-
-  const removeRows = useMemo(() => presetSkills.map((skill) => {
-    const installedAgents = selectedAgents.filter((agentKey) => existsInWorkspace(skill, agentKey));
-    return { skill, installedAgents };
-  }), [existsInWorkspace, presetSkills, selectedAgents]);
-
-  const removableRows = useMemo(
-    () => removeRows.filter((row) => row.installedAgents.length > 0),
-    [removeRows]
-  );
-
-  const removableKey = useMemo(
-    () => removableRows.map((row) => `${row.skill.id}:${row.installedAgents.join(",")}`).join("|"),
-    [removableRows]
-  );
-
-  useEffect(() => {
-    if (!open || action !== "remove") return;
-    setSelectedRemoveSkillIds(new Set(removableRows.map((row) => row.skill.id)));
-  }, [action, open, removableKey, removableRows]);
-
-  const selectedRemoveRows = useMemo(
-    () => removableRows.filter((row) => selectedRemoveSkillIds.has(row.skill.id)),
-    [removableRows, selectedRemoveSkillIds]
-  );
-
-  const selectedRemovePairCount = useMemo(
-    () => selectedRemoveRows.reduce((sum, row) => sum + row.installedAgents.length, 0),
-    [selectedRemoveRows]
-  );
-
-  const toggleAgent = useCallback((key: string) => {
-    setSelectedAgents((prev) => (
-      prev.includes(key) ? prev.filter((item) => item !== key) : [...prev, key]
-    ));
-  }, []);
-
-  const toggleRemoveSkill = useCallback((skillId: string) => {
-    setSelectedRemoveSkillIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(skillId)) next.delete(skillId);
-      else next.add(skillId);
-      return next;
-    });
-  }, []);
-
-  const handleSubmit = async () => {
-    if (!selectedPreset) return;
-    if (selectedAgents.length === 0) {
-      toast.error(t("presetActions.selectAgents"));
-      return;
-    }
-
-    setRunning(true);
+  const handleActivate = async (preset: Scenario) => {
+    const key = `${preset.id}-add`;
+    setLoadingKey(key);
+    const presetSkills = managedSkills.filter((s) => s.scenario_ids.includes(preset.id));
     const result: PresetWorkspaceActionResult = { added: 0, removed: 0, skipped: 0, failed: 0 };
-    try {
-      if (action === "add") {
-        for (const row of addRows) {
-          for (const agentKey of selectedAgents) {
-            if (existsInWorkspace(row.skill, agentKey)) {
-              result.skipped++;
-              continue;
-            }
-            try {
-              await onAddSkill(row.skill, agentKey);
-              result.added++;
-            } catch {
-              result.failed++;
-            }
-          }
-        }
-      } else {
-        for (const row of selectedRemoveRows) {
-          for (const agentKey of row.installedAgents) {
-            try {
-              await onRemoveSkill(row.skill, agentKey);
-              result.removed++;
-            } catch {
-              result.failed++;
-            }
-          }
+    for (const skill of presetSkills) {
+      for (const agentKey of selectedAgents) {
+        if (existsInWorkspace(skill, agentKey)) { result.skipped++; continue; }
+        try {
+          await onAddSkill(skill, agentKey);
+          result.added++;
+        } catch {
+          result.failed++;
         }
       }
-
-      await onComplete(result);
-
-      if (result.added > 0) {
-        toast.success(t("presetActions.addedToast", { added: result.added, skipped: result.skipped }));
-      } else if (result.removed > 0) {
-        toast.success(t("presetActions.removedToast", { removed: result.removed }));
-      } else if (result.failed === 0) {
-        toast.info(action === "add" ? t("presetActions.nothingToAdd") : t("presetActions.nothingToRemove"));
-      }
-      if (result.failed > 0) {
-        toast.error(t("presetActions.partialFailedToast", { count: result.failed }));
-      }
-
-      if (result.added > 0 || result.removed > 0) {
-        onClose();
-      }
-    } finally {
-      setRunning(false);
     }
+    await onComplete(result);
+    if (result.added > 0) {
+      toast.success(t("presetActions.addedToast", { added: result.added, skipped: result.skipped }));
+    } else if (result.failed === 0) {
+      toast.info(t("presetActions.nothingToAdd"));
+    }
+    if (result.failed > 0) toast.error(t("presetActions.partialFailedToast", { count: result.failed }));
+    setLoadingKey(null);
+  };
+
+  const handleDeactivate = async (preset: Scenario) => {
+    const key = `${preset.id}-remove`;
+    setLoadingKey(key);
+    const presetSkills = managedSkills.filter((s) => s.scenario_ids.includes(preset.id));
+    const result: PresetWorkspaceActionResult = { added: 0, removed: 0, skipped: 0, failed: 0 };
+    for (const skill of presetSkills) {
+      for (const agentKey of selectedAgents) {
+        if (!existsInWorkspace(skill, agentKey)) continue;
+        try {
+          await onRemoveSkill(skill, agentKey);
+          result.removed++;
+        } catch {
+          result.failed++;
+        }
+      }
+    }
+    await onComplete(result);
+    if (result.removed > 0) {
+      toast.success(t("presetActions.removedToast", { removed: result.removed }));
+    } else if (result.failed === 0) {
+      toast.info(t("presetActions.nothingToRemove"));
+    }
+    if (result.failed > 0) toast.error(t("presetActions.partialFailedToast", { count: result.failed }));
+    setLoadingKey(null);
   };
 
   if (!open) return null;
 
-  const submitDisabled =
-    running ||
-    !selectedPreset ||
-    selectedAgents.length === 0 ||
-    presetSkills.length === 0 ||
-    (action === "add" ? missingPairCount === 0 : selectedRemovePairCount === 0);
+  const busy = loadingKey !== null;
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !running && onClose()} />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !busy && onClose()} />
       <div className="relative flex max-h-[calc(100vh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-border-subtle bg-bg-secondary shadow-2xl">
+
+        {/* Header */}
         <div className="flex shrink-0 items-center justify-between border-b border-border-subtle px-5 py-4">
           <h2 className="text-[14px] font-semibold text-primary">{title}</h2>
           <button
             onClick={onClose}
-            disabled={running}
-            className="rounded-[4px] p-1.5 text-muted transition-colors hover:bg-surface-hover hover:text-secondary"
+            disabled={busy}
+            className="rounded-[4px] p-1.5 text-muted transition-colors hover:bg-surface-hover hover:text-secondary disabled:opacity-50"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="shrink-0 space-y-3 border-b border-border-subtle px-5 py-4">
-          <label className="block">
-            <span className="mb-1.5 block text-[12px] font-medium text-muted">{t("presetActions.preset")}</span>
-            <select
-              value={selectedPresetId}
-              onChange={(event) => setSelectedPresetId(event.target.value)}
-              className="app-input w-full"
-              disabled={running || presets.length === 0}
-            >
-              {presets.length === 0 ? (
-                <option value="">{t("presetActions.noPresets")}</option>
-              ) : presets.map((preset) => (
-                <option key={preset.id} value={preset.id}>
-                  {preset.name} ({preset.skill_count})
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <div>
-            <div className="mb-1.5 text-[12px] font-medium text-muted">{t("presetActions.action")}</div>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setAction("add")}
-                disabled={running}
-                className={cn(
-                  "flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-[13px] font-medium transition-colors",
-                  action === "add"
-                    ? "border-accent-border bg-accent-bg text-accent-light"
-                    : "border-border-subtle text-muted hover:border-border hover:text-secondary"
-                )}
-              >
-                <Plus className="h-3.5 w-3.5" />
-                {t("presetActions.addMissing")}
-              </button>
-              <button
-                onClick={() => setAction("remove")}
-                disabled={running}
-                className={cn(
-                  "flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-[13px] font-medium transition-colors",
-                  action === "remove"
-                    ? "border-red-500/30 bg-red-500/10 text-red-500"
-                    : "border-border-subtle text-muted hover:border-border hover:text-secondary"
-                )}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                {t("presetActions.removeMatching")}
-              </button>
-            </div>
-            <p className="mt-1.5 text-[12px] leading-snug text-muted">
-              {action === "add" ? t("presetActions.addHelp") : t("presetActions.removeHelp")}
-            </p>
-          </div>
-
-          <div>
-            <div className="mb-1.5 text-[12px] font-medium text-muted">{t("presetActions.agents")}</div>
-            <div className="flex flex-wrap gap-2">
+        {/* Agent selector */}
+        {availableAgents.length > 1 && (
+          <div className="shrink-0 border-b border-border-subtle px-5 py-3">
+            <div className="mb-2 text-[12px] font-medium text-muted">{t("presetActions.agents")}</div>
+            <div className="flex flex-wrap gap-1.5">
               {availableAgents.map((agent) => {
                 const active = selectedAgentSet.has(agent.key);
                 return (
                   <button
                     key={agent.key}
                     onClick={() => toggleAgent(agent.key)}
-                    disabled={running}
+                    disabled={busy}
                     className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors",
+                      "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] font-medium transition-colors",
                       active
                         ? "border-accent-border bg-accent-bg text-accent-light"
                         : "border-border-subtle text-muted hover:border-border hover:text-secondary"
                     )}
                   >
-                    {active ? <SquareCheck className="h-3.5 w-3.5" /> : <Square className="h-3.5 w-3.5" />}
+                    {active
+                      ? <SquareCheck className="h-3 w-3" />
+                      : <Square className="h-3 w-3" />}
                     {agent.display_name}
                   </button>
                 );
               })}
             </div>
           </div>
-        </div>
+        )}
 
+        {/* Preset list */}
         <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
-          {presetSkills.length === 0 ? (
-            <div className="py-12 text-center text-[13px] text-muted">
-              {selectedPreset ? t("presetActions.noPresetSkills") : t("presetActions.noPresets")}
-            </div>
-          ) : action === "add" ? (
-            <div className="divide-y divide-border-subtle">
-              {addRows.map(({ skill, missingAgents }) => (
-                <div key={skill.id} className="flex items-center gap-3 px-5 py-2.5">
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-[13px] font-medium text-primary">{skill.name}</div>
-                    {skill.description && (
-                      <div className="mt-0.5 truncate text-[12px] text-muted">{skill.description}</div>
-                    )}
-                  </div>
-                  <span className={cn(
-                    "shrink-0 rounded-full px-2 py-0.5 text-[12px] font-medium",
-                    missingAgents.length > 0 ? "bg-accent-bg text-accent-light" : "bg-surface-hover text-muted"
-                  )}>
-                    {missingAgents.length > 0
-                      ? t("presetActions.willAddToAgents", { count: missingAgents.length })
-                      : t("presetActions.alreadyInSelectedAgents")}
-                  </span>
-                </div>
-              ))}
-            </div>
+          {presets.length === 0 ? (
+            <div className="py-12 text-center text-[13px] text-muted">{t("presetActions.noPresets")}</div>
           ) : (
             <div className="divide-y divide-border-subtle">
-              {removeRows.map(({ skill, installedAgents }) => {
-                const removable = installedAgents.length > 0;
-                const checked = selectedRemoveSkillIds.has(skill.id);
+              {presets.map((preset) => {
+                const { status, installed, total } = computePresetStatus(
+                  preset, managedSkills, selectedAgents, existsInWorkspace
+                );
+                const scenarioIcon = getScenarioIconOption(preset);
+                const ScenarioIcon = scenarioIcon.icon;
+                const addKey = `${preset.id}-add`;
+                const rmKey = `${preset.id}-remove`;
+                const addLoading = loadingKey === addKey;
+                const rmLoading = loadingKey === rmKey;
+
                 return (
-                  <button
-                    key={skill.id}
-                    onClick={() => removable && toggleRemoveSkill(skill.id)}
-                    disabled={!removable || running}
-                    className={cn(
-                      "flex w-full items-center gap-3 px-5 py-2.5 text-left transition-colors",
-                      removable ? "hover:bg-surface-hover" : "cursor-not-allowed opacity-60"
-                    )}
-                  >
-                    {removable
-                      ? checked
-                        ? <SquareCheck className="h-3.5 w-3.5 shrink-0 text-red-500" />
-                        : <Square className="h-3.5 w-3.5 shrink-0 text-faint" />
-                      : <Square className="h-3.5 w-3.5 shrink-0 text-faint" />}
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-[13px] font-medium text-primary">{skill.name}</div>
-                      {skill.description && (
-                        <div className="mt-0.5 truncate text-[12px] text-muted">{skill.description}</div>
-                      )}
-                    </div>
+                  <div key={preset.id} className="flex items-center gap-3 px-5 py-3">
+                    {/* Icon */}
                     <span className={cn(
-                      "shrink-0 rounded-full px-2 py-0.5 text-[12px] font-medium",
-                      removable ? "bg-red-500/10 text-red-500" : "bg-surface-hover text-muted"
+                      "flex h-7 w-7 shrink-0 items-center justify-center rounded-md border",
+                      status === "active"
+                        ? `${scenarioIcon.activeClass} ${scenarioIcon.colorClass}`
+                        : "border-border bg-surface text-muted"
                     )}>
-                      {removable
-                        ? t("presetActions.installedInAgents", { count: installedAgents.length })
-                        : t("presetActions.notInstalled")}
+                      <ScenarioIcon className="h-3.5 w-3.5" />
                     </span>
-                  </button>
+
+                    {/* Name + skill count */}
+                    <div className="min-w-0 flex-1">
+                      <span className="truncate text-[13px] font-medium text-primary">{preset.name}</span>
+                      <span className="ml-2 text-[12px] text-muted">{preset.skill_count}</span>
+                    </div>
+
+                    {/* Status badge */}
+                    <span className={cn(
+                      "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                      status === "active" && "bg-emerald-500/10 text-emerald-500",
+                      status === "partial" && "bg-amber-500/10 text-amber-500",
+                      (status === "inactive" || status === "empty") && "bg-surface-hover text-muted"
+                    )}>
+                      {status === "active" && t("presetActions.statusActive")}
+                      {status === "partial" && t("presetActions.statusPartial", { installed, total })}
+                      {status === "inactive" && t("presetActions.statusInactive")}
+                      {status === "empty" && t("presetActions.noPresetSkills")}
+                    </span>
+
+                    {/* Action buttons */}
+                    {status !== "empty" && selectedAgents.length > 0 && (
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        {(status === "inactive" || status === "partial") && (
+                          <button
+                            onClick={() => handleActivate(preset)}
+                            disabled={busy}
+                            className="inline-flex items-center gap-1 rounded-md bg-accent px-2.5 py-1 text-[12px] font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
+                          >
+                            {addLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+                            {t("presetActions.activate")}
+                          </button>
+                        )}
+                        {(status === "active" || status === "partial") && (
+                          <button
+                            onClick={() => handleDeactivate(preset)}
+                            disabled={busy}
+                            className="inline-flex items-center gap-1 rounded-md border border-border-subtle px-2.5 py-1 text-[12px] font-medium text-muted transition-colors hover:border-red-400 hover:text-red-400 disabled:opacity-50"
+                          >
+                            {rmLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+                            {t("presetActions.deactivate")}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
           )}
         </div>
 
-        <div className="shrink-0 border-t border-border-subtle bg-bg-secondary px-5 py-3">
-          <div className="mb-3 text-[12px] text-muted">
-            {action === "add"
-              ? t("presetActions.addSummary", { count: missingPairCount, skipped: skippedPairCount })
-              : t("presetActions.removeSummary", { count: selectedRemovePairCount })}
-          </div>
-          <div className="flex items-center justify-end gap-2">
-            <button
-              onClick={onClose}
-              disabled={running}
-              className="rounded-md border border-border-subtle px-3 py-2 text-[13px] font-medium text-muted transition-colors hover:border-border hover:text-secondary disabled:opacity-50"
-            >
-              {t("common.cancel")}
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={submitDisabled}
-              className={cn(
-                "inline-flex min-w-[132px] items-center justify-center gap-1.5 rounded-md px-3 py-2 text-[13px] font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50",
-                action === "remove" ? "bg-red-500 hover:bg-red-600" : "bg-accent hover:bg-accent-hover"
-              )}
-            >
-              {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-              {action === "add"
-                ? t("presetActions.addButton", { count: missingPairCount })
-                : t("presetActions.removeButton", { count: selectedRemovePairCount })}
-            </button>
-          </div>
+        {/* Footer */}
+        <div className="shrink-0 flex justify-end border-t border-border-subtle px-5 py-3">
+          <button
+            onClick={onClose}
+            disabled={busy}
+            className="rounded-md border border-border-subtle px-3 py-2 text-[13px] font-medium text-muted transition-colors hover:border-border hover:text-secondary disabled:opacity-50"
+          >
+            {t("common.cancel")}
+          </button>
         </div>
       </div>
     </div>,
