@@ -16,7 +16,7 @@
   "help": {
     "eyebrow": "操作指南",
     "title": "快速上手 Skills Manager",
-    "description": "最快的使用路徑是：先選場景，把 Skill 安裝進中央倉庫，再在「我的 Skills」裡決定目前場景要啟用什麼；只有在需要專案內協作、Git 備份或環境設定時，再到對應頁面處理。",
+    "description": "最快的使用路徑是：先選 Preset，把 Skill 安裝進中央倉庫，再在「我的 Skills」裡決定目前 Preset 要啟用什麼；只有在需要專案內協作、Git 備份或環境設定時，再到對應頁面處理。",
     "items": {
       "scenarios": {
         "title": "Preset",
@@ -27,7 +27,7 @@
         "description": "支援從本機資料夾、Git 倉庫、壓縮檔或市集匯入。若你在設定裡填入 SkillsMP API Key，市集搜尋還可以切換為 AI 搜尋。"
       },
       "sync": {
-        "title": "在「我的 Skills」裡決定目前場景啟用什麼",
+        "title": "在「我的 Skills」裡決定目前 Preset 啟用什麼",
         "description": "在這裡啟用或移除 Skill、加入標籤、檢視文件與來源資訊、檢查更新、查看版本歷史，也可以依 Agent 手動同步或取消同步。"
       },
       "projects": {
@@ -40,12 +40,12 @@
       },
       "settings": {
         "title": "環境設定統一放在設定頁",
-        "description": "在這裡檢查 Agent 路徑、加入自訂工具、切換同步模式、主題、字級、語言和預設場景，設定托盤、代理、Git 遠端、AI 搜尋 Key，並檢查應用更新。"
+        "description": "在這裡檢查 Agent 路徑、加入自訂工具、切換同步模式、主題、字級、語言和預設 Preset，設定托盤、代理、Git 遠端、AI 搜尋 Key，並檢查應用更新。"
       }
     }
   },
   "commandPalette": {
-    "placeholder": "跳轉到技能、場景、專案或操作…",
+    "placeholder": "跳轉到技能、Preset、專案或操作…",
     "empty": "沒有符合項目，換個關鍵字試試。",
     "skills": "技能",
     "scenarios": "Preset",
@@ -60,13 +60,13 @@
   },
   "dashboard": {
     "greeting": "你好！",
-    "currentScenario": "當前場景",
+    "currentScenario": "當前 Preset",
     "skillsEnabled": "已啟用 {{count}} 個 Skills",
-    "scenarioSkills": "當前場景 Skills",
+    "scenarioSkills": "當前 Preset Skills",
     "synced": "已同步",
     "supportedAgents": "支援 Agent",
     "scanImport": "掃描本機 Skills 匯入",
-    "installNew": "安裝新 Skills 到當前場景",
+    "installNew": "安裝新 Skills 到當前 Preset",
     "recentActivity": "近期動態"
   },
   "mySkills": {
@@ -79,7 +79,7 @@
     "defaultLocationMissing": "預設目標位置缺失",
     "openLocationSettings": "開啟設定",
     "applyCallout": "點擊 Preset 只會開啟瀏覽。使用「套用 Preset」可把其中的 Skills 加入到或移出選中的 Agent。",
-    "subtitle": "中央倉庫共 {{count}} 個 Skills 已在「{{scenario}}」場景中啟用",
+    "subtitle": "中央倉庫共 {{count}} 個 Skills 已在「{{scenario}}」Preset 中啟用",
     "searchPlaceholder": "搜尋中央倉庫中的 Skills...",
     "allStatus": "全部狀態",
     "synced": "已同步",
@@ -88,23 +88,23 @@
     "enable": "啟用",
     "enabledButton": "已啟用",
     "disable": "停用",
-    "enableForScenario": "啟用到當前場景",
-    "disableForScenario": "從當前場景停用",
-    "enabledInScenario": "已加入當前場景",
-    "disabledInScenario": "已從當前場景移除",
-    "inScenario": "當前場景已啟用",
-    "notInScenario": "當前場景未啟用",
-    "remove": "從當前場景移除",
+    "enableForScenario": "啟用到當前 Preset",
+    "disableForScenario": "從當前 Preset 停用",
+    "enabledInScenario": "已加入當前 Preset",
+    "disabledInScenario": "已從當前 Preset 移除",
+    "inScenario": "當前 Preset 已啟用",
+    "notInScenario": "當前 Preset 未啟用",
+    "remove": "從當前 Preset 移除",
     "delete": "刪除 Skill",
-    "deleteConfirm": "確定徹底刪除 Skill「{{name}}」嗎？中央倉庫檔案、場景關聯和已同步到各 Agent 的目標都會被移除。",
+    "deleteConfirm": "確定徹底刪除 Skill「{{name}}」嗎？中央倉庫檔案、Preset 關聯和已同步到各 Agent 的目標都會被移除。",
     "deleted": "已刪除",
     "viewDoc": "檢視文件",
     "noSkills": "沒有可顯示的 Skills",
     "addFirst": "點擊「安裝 Skills」開始新增到中央倉庫",
     "noMatch": "沒有符合當前搜尋或篩選條件的 Skills",
-    "noScenario": "當前還沒有可用場景",
-    "currentScenarioFallback": "當前場景",
-    "scenarioCount": "{{count}} 個場景",
+    "noScenario": "當前還沒有可用 Preset",
+    "currentScenarioFallback": "當前 Preset",
+    "scenarioCount": "{{count}} 個 Preset",
     "syncCoverage": "同步覆蓋",
     "syncSummary": "已同步 {{synced}} / {{total}}",
     "agentTogglesTitle": "Agent 開關",
@@ -189,8 +189,8 @@
     "gitConfigEntry": "同步設定",
     "filters": {
       "all": "全部",
-      "enabled": "當前場景已啟用",
-      "available": "當前場景未啟用"
+      "enabled": "當前 Preset 已啟用",
+      "available": "當前 Preset 未啟用"
     },
     "sourceType": "來源類型",
     "sourceFilter": {
@@ -216,7 +216,7 @@
     "batchAlreadyUpToDate": "{{count}} 個 Skill 已是最新",
     "batchUpdateFailed": "{{count}} 個 Skill 更新失敗",
     "deleteSelected": "刪除 {{count}} 個",
-    "batchDeleteConfirm": "確定徹底刪除選中的 {{count}} 個 Skill 嗎？中央倉庫檔案、場景關聯和已同步到各 Agent 的目標都會被移除。",
+    "batchDeleteConfirm": "確定徹底刪除選中的 {{count}} 個 Skill 嗎？中央倉庫檔案、Preset 關聯和已同步到各 Agent 的目標都會被移除。",
     "batchDeleted": "已刪除 {{count}} 個 Skill",
     "batchDeleteFailed": "{{count}} 個 Skill 刪除失敗",
     "batchToggleFailed": "{{count}} 個 Skill 更新失敗",
@@ -318,7 +318,7 @@
       "noResults": "沒有發現可匯入的本機 Skills",
       "noResultsHint": "當前目錄可能已經全部納入管理，或者相關 Agent 目錄中還沒有 Skills。",
       "locations": "{{count}} 個來源位置",
-      "listHint": "偵測到現有本機 Skills，可直接匯入到中央倉庫並加入當前場景。",
+      "listHint": "偵測到現有本機 Skills，可直接匯入到中央倉庫並加入當前 Preset。",
       "listImportedHint": "掃描結果都已納入中央倉庫，無需重複匯入。",
       "stats": {
         "detected": "已發現",
@@ -374,7 +374,7 @@
     "addAgent": "新增",
     "globalConfig": "全域設定",
     "repoPath": "中央倉庫路徑",
-    "repoPathDesc": "所有 Skills 和場景設定的預設儲存位置。",
+    "repoPathDesc": "所有 Skills 和 Preset 設定的預設儲存位置。",
     "repoPathSaved": "中央倉庫路徑已更新",
     "repoPathReset": "中央倉庫路徑已恢復預設",
     "repoPathRestartNotice": "重新啟動應用後，新路徑才會正式生效並遷移既有資料。",
@@ -387,10 +387,10 @@
     "syncModeDesc": "建議使用符號連結，佔用空間極小且修改可即時生效。",
     "symlink": "符號連結",
     "copy": "檔案複製",
-    "currentScenario": "當前場景",
-    "currentScenarioDesc": "立即切換應用當前使用的場景，並重新整理 Skills 設定。",
-    "defaultScenario": "預設啟動場景",
-    "defaultScenarioDesc": "應用啟動時自動載入的場景。",
+    "currentScenario": "當前 Preset",
+    "currentScenarioDesc": "立即切換應用當前使用的 Preset，並重新整理 Skills 設定。",
+    "defaultScenario": "預設啟動 Preset",
+    "defaultScenarioDesc": "應用啟動時自動載入的 Preset。",
     "theme": "主題",
     "themeDesc": "選擇應用的外觀主題。",
     "themeLight": "淺色",
@@ -406,7 +406,7 @@
     "help": "說明",
     "about": "關於",
     "version": "Skills Manager 1.6.0",
-    "tagline": "跨平台。極簡、高效、無感多場景切換。",
+    "tagline": "跨平台。極簡、高效、無感多 Preset 切換。",
     "checkUpdate": "檢查更新",
     "checking": "檢查中…",
     "updateAvailable": "發現新版本 {{version}}！",
@@ -498,7 +498,7 @@
     "loadFailed": "載入{{item}}失敗",
     "dataOutOfDate": "部分資料未成功重新整理",
     "documentMissing": "沒有找到文件檔案",
-    "scenarios": "場景",
+    "scenarios": "Preset",
     "agents": "Agent 狀態",
     "skills": "Skills 清單",
     "success": "操作成功",
@@ -548,7 +548,7 @@
     "tabManual": "手動新增",
     "tabScan": "掃描發現",
     "tabLinked": "關聯工作區",
-    "addLinkedHint": "關聯一個外部 Skills 根目錄。它只會作為工作區管理，不參與全域場景同步。",
+    "addLinkedHint": "關聯一個外部 Skills 根目錄。它只會作為工作區管理，不參與全域 Preset 同步。",
     "linkedNamePlaceholder": "工作區名稱",
     "linkedPathPlaceholder": "Skills 目錄路徑",
     "linkedDisabledPathHint": "將自動建立同層目錄（字尾 \"-disabled\"）用於存放停用的 Skills。",

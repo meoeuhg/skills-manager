@@ -16,7 +16,7 @@
   "help": {
     "eyebrow": "操作指南",
     "title": "快速上手 Skills Manager",
-    "description": "最快路径：选场景 → 安装 Skill → 在「我的 Skills」里管理启用状态。按 ⌘K 可随时呼出命令面板快速跳转。项目协作、Git 备份、环境配置等按需使用。",
+    "description": "最快路径：选 Preset → 安装 Skill → 在「我的 Skills」里管理启用状态。按 ⌘K 可随时呼出命令面板快速跳转。项目协作、Git 备份、环境配置等按需使用。",
     "items": {
       "workflows": {
         "title": "推荐工作流",
@@ -32,7 +32,7 @@
       },
       "sync": {
         "title": "我的 Skills",
-        "description": "管理当前场景的 Skill 启用状态，支持批量标签编辑、按 Agent 同步或取消同步。点击 Skill 可查看文档、版本历史和 Agent 同步详情。"
+        "description": "管理当前 Preset 的 Skill 启用状态，支持批量标签编辑、按 Agent 同步或取消同步。点击 Skill 可查看文档、版本历史和 Agent 同步详情。"
       },
       "projects": {
         "title": "项目工作区",
@@ -44,12 +44,12 @@
       },
       "settings": {
         "title": "设置",
-        "description": "管理 Agent 路径与开关、自定义 Agent、同步模式、主题字号、语言、默认场景、网络代理、Git 远程、AI 搜索 Key，以及应用更新。"
+        "description": "管理 Agent 路径与开关、自定义 Agent、同步模式、主题字号、语言、默认 Preset、网络代理、Git 远程、AI 搜索 Key，以及应用更新。"
       }
     }
   },
   "commandPalette": {
-    "placeholder": "跳转到技能、场景、项目或操作…",
+    "placeholder": "跳转到技能、Preset、项目或操作…",
     "empty": "没有匹配项，换个关键词试试。",
     "skills": "技能",
     "scenarios": "Preset",
@@ -64,13 +64,13 @@
   },
   "dashboard": {
     "greeting": "你好！",
-    "currentScenario": "当前场景",
+    "currentScenario": "当前 Preset",
     "skillsEnabled": "已启用 {{count}} 个 Skills",
-    "scenarioSkills": "当前场景 Skills",
+    "scenarioSkills": "当前 Preset Skills",
     "synced": "已同步",
     "supportedAgents": "支持 Agent",
     "scanImport": "扫描本地 Skills 导入",
-    "installNew": "安装新 Skills 到当前场景",
+    "installNew": "安装新 Skills 到当前 Preset",
     "recentActivity": "近期动态"
   },
   "mySkills": {
@@ -83,7 +83,7 @@
     "defaultLocationMissing": "默认目标位置缺失",
     "openLocationSettings": "打开设置",
     "applyCallout": "点击 Preset 只会打开浏览。使用「应用 Preset」可把其中的 Skills 添加到或移出选中的 Agent。",
-    "subtitle": "中央仓库共 {{count}} 个 Skills 已在“{{scenario}}”场景中启用",
+    "subtitle": "中央仓库共 {{count}} 个 Skills 已在“{{scenario}}”Preset 中启用",
     "searchPlaceholder": "搜索中央仓库中的 Skills...",
     "allStatus": "全部状态",
     "synced": "已同步",
@@ -92,23 +92,23 @@
     "enable": "启用",
     "enabledButton": "已启用",
     "disable": "停用",
-    "enableForScenario": "启用到当前场景",
-    "disableForScenario": "从当前场景停用",
-    "enabledInScenario": "已加入当前场景",
-    "disabledInScenario": "已从当前场景移除",
-    "inScenario": "当前场景已启用",
-    "notInScenario": "当前场景未启用",
-    "remove": "从当前场景移除",
+    "enableForScenario": "启用到当前 Preset",
+    "disableForScenario": "从当前 Preset 停用",
+    "enabledInScenario": "已加入当前 Preset",
+    "disabledInScenario": "已从当前 Preset 移除",
+    "inScenario": "当前 Preset 已启用",
+    "notInScenario": "当前 Preset 未启用",
+    "remove": "从当前 Preset 移除",
     "delete": "删除 Skill",
-    "deleteConfirm": "确定彻底删除 Skill \"{{name}}\" 吗？中央仓库文件、场景关联和已同步到各 Agent 的目标都会被移除。",
+    "deleteConfirm": "确定彻底删除 Skill \"{{name}}\" 吗？中央仓库文件、Preset 关联和已同步到各 Agent 的目标都会被移除。",
     "deleted": "已删除",
     "viewDoc": "查看文档",
     "noSkills": "没有可显示的 Skills",
     "addFirst": "点击“安装 Skills”开始添加到中央仓库",
     "noMatch": "没有符合当前搜索或筛选条件的 Skills",
-    "noScenario": "当前还没有可用场景",
-    "currentScenarioFallback": "当前场景",
-    "scenarioCount": "{{count}} 个场景",
+    "noScenario": "当前还没有可用 Preset",
+    "currentScenarioFallback": "当前 Preset",
+    "scenarioCount": "{{count}} 个 Preset",
     "syncCoverage": "同步覆盖",
     "syncSummary": "已同步 {{synced}} / {{total}}",
     "moreAgents": "+{{count}} 个 Agent",
@@ -206,8 +206,8 @@
     "gitConfigEntry": "同步配置",
     "filters": {
       "all": "全部",
-      "enabled": "当前场景已启用",
-      "available": "当前场景未启用"
+      "enabled": "当前 Preset 已启用",
+      "available": "当前 Preset 未启用"
     },
     "sourceFilter": {
       "all": "全部来源",
@@ -232,7 +232,7 @@
     "batchAlreadyUpToDate": "{{count}} 个 Skill 已是最新",
     "batchUpdateFailed": "{{count}} 个 Skill 更新失败",
     "deleteSelected": "删除 {{count}} 个",
-    "batchDeleteConfirm": "确定彻底删除选中的 {{count}} 个 Skill 吗？中央仓库文件、场景关联和已同步到各 Agent 的目标都会被移除。",
+    "batchDeleteConfirm": "确定彻底删除选中的 {{count}} 个 Skill 吗？中央仓库文件、Preset 关联和已同步到各 Agent 的目标都会被移除。",
     "batchDeleted": "已删除 {{count}} 个 Skill",
     "batchDeleteFailed": "{{count}} 个 Skill 删除失败",
     "batchToggleFailed": "{{count}} 个 Skill 更新失败",
@@ -352,7 +352,7 @@
       "noResults": "没有发现可导入的本地 Skills",
       "noResultsHint": "当前目录可能已经全部纳入管理，或者相关 Agent 目录中还没有 Skills。",
       "locations": "{{count}} 个来源位置",
-      "listHint": "检测到现有本地 Skills，可直接导入到中央仓库并加入当前场景。",
+      "listHint": "检测到现有本地 Skills，可直接导入到中央仓库并加入当前 Preset。",
       "listImportedHint": "扫描结果都已纳入中央仓库，无需重复导入。",
       "stats": {
         "detected": "已发现",
@@ -408,7 +408,7 @@
     "addAgent": "添加",
     "globalConfig": "全局配置",
     "repoPath": "中央仓库路径",
-    "repoPathDesc": "所有 Skills 和场景配置的默认存储位置。",
+    "repoPathDesc": "所有 Skills 和 Preset 配置的默认存储位置。",
     "repoPathSaved": "中央仓库路径已更新",
     "repoPathReset": "中央仓库路径已恢复默认",
     "repoPathRestartNotice": "重启应用后，新路径会正式生效并迁移已有数据。",
@@ -421,10 +421,10 @@
     "syncModeDesc": "推荐使用符号链接，占用空间极小且修改可实时生效。",
     "symlink": "符号链接",
     "copy": "文件复制",
-    "currentScenario": "当前场景",
-    "currentScenarioDesc": "立即切换应用当前使用的场景，并刷新 Skills 配置。",
-    "defaultScenario": "默认启动场景",
-    "defaultScenarioDesc": "应用启动时自动加载的场景。",
+    "currentScenario": "当前 Preset",
+    "currentScenarioDesc": "立即切换应用当前使用的 Preset，并刷新 Skills 配置。",
+    "defaultScenario": "默认启动 Preset",
+    "defaultScenarioDesc": "应用启动时自动加载的 Preset。",
     "theme": "主题",
     "themeDesc": "选择应用的外观主题。",
     "themeLight": "浅色",
@@ -440,7 +440,7 @@
     "help": "帮助",
     "about": "关于",
     "version": "Skills Manager 1.17.0",
-    "tagline": "跨平台。极简、高效、无感多场景切换。",
+    "tagline": "跨平台。极简、高效、无感多 Preset 切换。",
     "checkUpdate": "检查更新",
     "checking": "检查中…",
     "updateAvailable": "发现新版本 {{version}}！",
@@ -555,7 +555,7 @@
     "loadFailed": "加载{{item}}失败",
     "dataOutOfDate": "部分数据未成功刷新",
     "documentMissing": "没有找到文档文件",
-    "scenarios": "场景",
+    "scenarios": "Preset",
     "agents": "Agent 状态",
     "skills": "Skills 列表",
     "success": "操作成功",
@@ -606,7 +606,7 @@
     "tabManual": "手动添加",
     "tabScan": "扫描发现",
     "tabLinked": "关联工作区",
-    "addLinkedHint": "关联一个外部 Skills 根目录。它只会作为工作区管理，不参与全局场景同步。",
+    "addLinkedHint": "关联一个外部 Skills 根目录。它只会作为工作区管理，不参与全局 Preset 同步。",
     "linkedNamePlaceholder": "工作区名称",
     "linkedPathPlaceholder": "Skills 目录路径",
     "linkedDisabledPathHint": "将自动创建同级目录（后缀 \"-disabled\"）用于存放停用的 Skills。",
