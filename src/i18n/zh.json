@@ -32,7 +32,11 @@
       },
       "sync": {
         "title": "我的 Skills",
-        "description": "浏览所有已安装 Skills，支持批量标签编辑和按 Agent 同步开关。点击 Skill 可查看文档、版本历史和 Agent 同步详情。"
+        "description": "浏览所有已安装 Skills，支持批量标签编辑和按 Agent 同步开关。点击 Skill 卡片上的 Agent 图标即可一键为该 Agent 安装或移除这个 Skill；点击卡片本身可查看文档、版本历史和 Agent 同步详情。"
+      },
+      "global": {
+        "title": "全局工作区",
+        "description": "每个 Agent 都有自己的页面，列出其全局目录里的所有 Skills（包括不是通过 Skills Manager 安装的），与 Agent 实际看到的内容保持一致。可按 Agent 添加或移除 Skills，或通过「全部 Agents」总览跨所有已安装 Agent 统一管理。"
       },
       "projects": {
         "title": "项目工作区",
@@ -44,7 +48,7 @@
       },
       "settings": {
         "title": "设置",
-        "description": "管理 Agent 路径与开关、自定义 Agent、同步模式、主题字号、语言、网络代理、Git 远程、AI 搜索 Key，以及应用更新。"
+        "description": "管理 Agent 路径与开关、自定义 Agent、拖拽调整 Agent 在全应用中的显示顺序、同步模式、主题字号、语言、网络代理、Git 远程、AI 搜索 Key，以及应用更新。"
       }
     }
   },
@@ -444,7 +448,7 @@
     "language": "语言",
     "help": "帮助",
     "about": "关于",
-    "version": "Skills Manager 1.18.0",
+    "version": "Skills Manager 1.19.0",
     "tagline": "跨平台。极简、高效、无感多 Preset 切换。",
     "checkUpdate": "检查更新",
     "checking": "检查中…",

@@ -32,7 +32,11 @@
       },
       "sync": {
         "title": "Library",
-        "description": "Browse all installed skills with bulk tag editing and per-agent sync toggles. Click any skill to view docs, version history, and agent sync details."
+        "description": "Browse all installed skills with bulk tag editing and per-agent sync toggles. Click an agent icon on any skill card to install or remove that skill for that agent in one click. Click the card itself to view docs, version history, and agent sync details."
+      },
+      "global": {
+        "title": "Global Workspace",
+        "description": "Each agent gets its own page listing every skill in its global folder — including ones installed outside Skills Manager — so the view matches what the agent actually sees. Add or remove skills per agent, or use the All Agents overview to manage every installed agent at once."
       },
       "projects": {
         "title": "Project Workspaces",
@@ -44,7 +48,7 @@
       },
       "settings": {
         "title": "Settings",
-        "description": "Manage agent paths and toggles, add custom agents, change sync mode, theme, text size, language, proxy, Git remote, AI search key, and check for app updates."
+        "description": "Manage agent paths and toggles, add custom agents, drag to reorder how agents appear across the app, change sync mode, theme, text size, language, proxy, Git remote, AI search key, and check for app updates."
       }
     }
   },
@@ -444,7 +448,7 @@
     "language": "Language",
     "help": "Help",
     "about": "About",
-    "version": "Skills Manager 1.18.0",
+    "version": "Skills Manager 1.19.0",
     "tagline": "Cross-platform. Minimal, efficient, seamless multi-scenario switching.",
     "checkUpdate": "Check for Updates",
     "checking": "Checking…",

@@ -409,27 +409,44 @@ export function GlobalWorkspace() {
     () => (agentKey ? tools.find((t) => t.key === agentKey) ?? null : null),
     [agentKey, tools]
   );
+  const currentToolKey = currentTool?.key ?? null;
 
+  const localSkillsRequestRef = useRef(0);
   const loadLocalSkills = useCallback(async () => {
-    if (!currentTool) {
+    const requestId = ++localSkillsRequestRef.current;
+    if (!currentToolKey) {
       setLocalSkills([]);
       return;
     }
     setLocalSkillsLoading(true);
     try {
-      const skills = await api.getGlobalLocalSkills(currentTool.key);
-      setLocalSkills(skills);
+      const skills = await api.getGlobalLocalSkills(currentToolKey);
+      if (localSkillsRequestRef.current === requestId) setLocalSkills(skills);
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, t("common.error")));
-      setLocalSkills([]);
+      if (localSkillsRequestRef.current === requestId) {
+        toast.error(getErrorMessage(error, t("common.error")));
+        setLocalSkills([]);
+      }
     } finally {
-      setLocalSkillsLoading(false);
+      if (localSkillsRequestRef.current === requestId) setLocalSkillsLoading(false);
     }
-  }, [currentTool, t]);
+  }, [currentToolKey, t]);
 
+  // Fetch agent-local skills once per agent. Guarding on the key (not the
+  // loadLocalSkills identity) keeps this from re-firing every time the tools
+  // array is refetched or React StrictMode re-runs the effect.
+  const loadedAgentKeyRef = useRef<string | null>(null);
   useEffect(() => {
+    if (!currentToolKey) {
+      loadedAgentKeyRef.current = null;
+      localSkillsRequestRef.current += 1; // discard any in-flight load for the previous agent
+      setLocalSkills([]);
+      return;
+    }
+    if (loadedAgentKeyRef.current === currentToolKey) return;
+    loadedAgentKeyRef.current = currentToolKey;
     void loadLocalSkills();
-  }, [loadLocalSkills]);
+  }, [currentToolKey, loadLocalSkills]);
 
   useEffect(() => {
     localDetailRequestRef.current += 1;
