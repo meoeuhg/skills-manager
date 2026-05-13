@@ -36,11 +36,17 @@ fn enrich_center_status(
     mut skills: Vec<project_scanner::ProjectSkillInfo>,
     all_managed: &[SkillRecord],
     all_targets: &[SkillTargetRecord],
+    tags_map: &std::collections::HashMap<String, Vec<String>>,
 ) -> Vec<project_scanner::ProjectSkillInfo> {
     for skill in &mut skills {
         let matched = find_verified_center_match(skill, all_managed, all_targets);
         skill.in_center = matched.is_some();
         skill.center_skill_id = matched.map(|record| record.id.clone());
+        skill.tags = skill
+            .center_skill_id
+            .as_ref()
+            .and_then(|skill_id| tags_map.get(skill_id).cloned())
+            .unwrap_or_default();
         skill.sync_status = classify_sync_status(skill, matched);
     }
     skills
@@ -127,7 +133,13 @@ pub async fn get_global_local_skills(
         let skills = read_agent_local_skills(&adapter);
         let all_managed = store.get_all_skills().map_err(AppError::db)?;
         let all_targets = store.get_all_targets().map_err(AppError::db)?;
-        Ok(enrich_center_status(skills, &all_managed, &all_targets))
+        let tags_map = store.get_tags_map().unwrap_or_default();
+        Ok(enrich_center_status(
+            skills,
+            &all_managed,
+            &all_targets,
+            &tags_map,
+        ))
     })
     .await?
 }
@@ -319,10 +331,15 @@ fn update_agent_local_skill_from_center(
 
 #[cfg(test)]
 mod tests {
-    use super::{import_agent_local_skill_to_center, update_agent_local_skill_from_center};
+    use super::{
+        enrich_center_status, import_agent_local_skill_to_center,
+        update_agent_local_skill_from_center,
+    };
     use crate::core::content_hash;
+    use crate::core::project_scanner::ProjectSkillInfo;
     use crate::core::skill_store::{ScenarioRecord, SkillRecord, SkillStore};
     use crate::core::{central_repo, installer};
+    use std::collections::HashMap;
 
     #[test]
     fn importing_agent_local_skill_does_not_attach_scenario_or_target() {
@@ -382,6 +399,62 @@ mod tests {
         assert!(store.get_all_targets().unwrap().is_empty());
 
         central_repo::set_test_base_dir_override(None);
+    }
+
+    #[test]
+    fn enriching_agent_local_skills_copies_center_tags() {
+        let skill = ProjectSkillInfo {
+            name: "local-tool".to_string(),
+            dir_name: "local-tool".to_string(),
+            relative_path: "local-tool".to_string(),
+            description: Some("Agent copy".to_string()),
+            path: "/tmp/agent-skills/local-tool".to_string(),
+            files: vec![],
+            enabled: true,
+            agent: "test_agent".to_string(),
+            agent_display_name: "Test Agent".to_string(),
+            tags: Vec::new(),
+            in_center: false,
+            sync_status: "project_only".to_string(),
+            center_skill_id: None,
+            last_modified_at: None,
+            content_hash: Some("same-hash".to_string()),
+        };
+
+        let managed = SkillRecord {
+            id: "center-id".to_string(),
+            name: "local-tool".to_string(),
+            description: Some("Center copy".to_string()),
+            source_type: "local".to_string(),
+            source_ref: None,
+            source_ref_resolved: None,
+            source_subpath: None,
+            source_branch: None,
+            source_revision: None,
+            remote_revision: None,
+            central_path: "/tmp/center/local-tool".to_string(),
+            content_hash: Some("same-hash".to_string()),
+            enabled: true,
+            created_at: 0,
+            updated_at: 0,
+            status: "ok".to_string(),
+            update_status: "local_only".to_string(),
+            last_checked_at: Some(0),
+            last_check_error: None,
+        };
+
+        let mut tags_map = HashMap::new();
+        tags_map.insert(
+            "center-id".to_string(),
+            vec!["create".to_string(), "manage".to_string()],
+        );
+
+        let enriched = enrich_center_status(vec![skill], &[managed], &[], &tags_map);
+        assert_eq!(enriched[0].center_skill_id.as_deref(), Some("center-id"));
+        assert_eq!(
+            enriched[0].tags,
+            vec!["create".to_string(), "manage".to_string()]
+        );
     }
 
     #[test]
