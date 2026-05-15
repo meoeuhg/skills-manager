@@ -156,7 +156,8 @@ pub fn default_tool_adapters() -> Vec<ToolAdapter> {
             display_name: "Codex".into(),
             relative_skills_dir: ".codex/skills".into(),
             relative_detect_dir: ".codex".into(),
-            additional_scan_dirs: vec![],
+            // Codex now reads skills from the unified `~/.agents/skills` location too.
+            additional_scan_dirs: vec![".agents/skills".into()],
             override_skills_dir: None,
             is_custom: false,
             recursive_scan: false,
@@ -244,7 +245,8 @@ pub fn default_tool_adapters() -> Vec<ToolAdapter> {
             display_name: "GitHub Copilot".into(),
             relative_skills_dir: ".copilot/skills".into(),
             relative_detect_dir: ".copilot".into(),
-            additional_scan_dirs: vec![],
+            // GitHub Copilot now reads skills from the unified `~/.agents/skills` location too.
+            additional_scan_dirs: vec![".agents/skills".into()],
             override_skills_dir: None,
             is_custom: false,
             recursive_scan: false,
